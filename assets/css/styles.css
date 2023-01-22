@@ -1,0 +1,115 @@
+body {
+    background-color: #00693E;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    vertical-align: middle;
+}
+
+input[type=submit], input[type=reset], button {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #00693E;
+    background-color: white;
+    padding: 5px;
+    width: 135px;
+    height: 35px;
+	border: 0;
+    border-radius: 35px;
+    margin-top: 100px;
+    cursor: pointer;
+}
+
+input[type=submit]:hover, input[type=reset]:hover, button:hover {
+    color: white;
+    background-color: #00693E;
+    border-style: solid;
+    border-width: 2px;
+    border-color: white;
+}
+
+input[type=reset] {
+    margin-left: 20px;
+}
+
+#logouffs{
+    width: 18%;
+    margin: 0;
+}
+
+#first {
+    size: 10px;
+    margin-top: 20px;
+    margin-bottom: 50px;
+}
+
+#second {
+    margin-bottom: 50px;
+}
+
+input[type="file"] {
+	display: none;
+}
+
+.inputfile_box {
+  	position: relative;
+	margin-top: 15vh;
+    text-align: center;
+}
+
+.file_box {
+	display: inline-block;
+	background: #CCCCCC;
+	box-sizing: border-box;
+  	height: 40px;
+  	width: 500px;
+	text-align: right;
+    padding: 9px 10px 9px 10px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.file_button {
+    color: #323232;
+	position: absolute;
+	background: #BBBBBB;
+    height: 22px;
+  	top: 0px;
+  	margin-left: -500px;
+	padding: 9px 10px 9px 10px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+#file_name {
+    color: #323232;
+}
+
+#clip {
+	font-size: 1.2rem;
+	color: #323232;
+	margin: 0;
+	padding: 0;
+	vertical-align: middle;
+}
+
+table {
+    position: relative;
+    margin-top: 10px;
+	margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+}
+
+table th {
+    font-size: 1.3rem; 
+	padding: 5px;
+	font-weight: bold;
+    border-bottom: 1.2px solid white;
+}
+
+table td {
+    font-size: 1.1rem; 
+    padding: 5px;
+    border-bottom: 1.2px solid white;
+}
