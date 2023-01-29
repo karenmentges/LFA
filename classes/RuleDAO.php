@@ -40,9 +40,9 @@
 
         public function r_insert(Rule $rule){
             try{
-                $consulta = $this->connection->prepare("INSERT INTO rule VALUES (NULL, :element, :content)");
-                $consulta->bindValue(":element", $rule->getElement());
+                $consulta = $this->connection->prepare("INSERT INTO rule VALUES (NULL, :content, :reference)");
                 $consulta->bindValue(":content", $rule->getContent());
+                $consulta->bindValue(":reference", $rule->getReference());
                 return $consulta->execute();
             }
             catch(PDOException $e){
@@ -52,9 +52,9 @@
 
         public function r_update(Rule $rule){
             try{
-                $consulta = $this->connection->prepare("UPDATE rule SET element=:element, content=:content WHERE id=:id");
-                $consulta->bindValue(":element", $rule->getElement());
+                $consulta = $this->connection->prepare("UPDATE rule SET content=:content, reference=:reference WHERE id=:id");
                 $consulta->bindValue(":content", $rule->getContent());
+                $consulta->bindValue(":reference", $rule->getReference());
                 $consulta->bindValue(":id", $rule->getId());
                 return $consulta->execute();
             }

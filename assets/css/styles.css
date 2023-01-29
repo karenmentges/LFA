@@ -103,13 +103,13 @@ table {
 
 table th {
     font-size: 1.3rem; 
-	padding: 5px;
+	padding: 5px 25px;
 	font-weight: bold;
-    border-bottom: 1.2px solid white;
+    border: 1px solid white;
 }
 
 table td {
     font-size: 1.1rem; 
-    padding: 5px;
-    border-bottom: 1.2px solid white;
+	padding: 5px 25px;
+    border: 1px solid white;
 }

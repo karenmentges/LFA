@@ -2,8 +2,8 @@
     class Rule{
 
         private $id;
-        private $element;
         private $content;
+        private $reference;
 
 
         public function getId(){
@@ -14,14 +14,6 @@
             $this->id = $id;
         }
 
-        public function getElement(){
-            return $this->element;
-        }
-
-        public function setElement($element){
-            $this->element = $element;
-        }
-
         public function getContent(){
             return $this->content;
         }
@@ -29,7 +21,15 @@
         public function setContent($content){
             $this->content = $content;
         }
-        
+
+        public function getReference(){
+            return $this->reference;
+        }
+
+        public function setReference($reference){
+            $this->reference = $reference;
+        }
+
         public function validate(){
             $erros = array();
             return $erros;                                  

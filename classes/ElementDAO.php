@@ -22,10 +22,10 @@
             }
         }
 
-        public function e_search($id){
+        public function e_search($content){
             try{
-                $consulta = $this->connection->prepare("SELECT * FROM element WHERE id = :id");
-                $consulta->bindValue(":id", $id);
+                $consulta = $this->connection->prepare("SELECT * FROM element WHERE content = :content");
+                $consulta->bindValue(":content", $content);
                 $consulta->execute();
                 $resultado = $consulta->fetchAll(PDO::FETCH_CLASS, "Element");
                 if(count($resultado) == 1)
