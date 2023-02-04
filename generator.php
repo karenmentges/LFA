@@ -28,20 +28,20 @@
                 CREATE USER 'admin'@'localhost' IDENTIFIED BY '123456789!'; 
                 GRANT SELECT, INSERT, UPDATE, DELETE ON databaselfa.* TO 'admin'@'localhost';";
         $conn->exec($sql);
-        $sql = "CREATE TABLE IF NOT EXISTS element(
+        $sql = "CREATE TABLE IF NOT EXISTS alphabet(
                     id integer auto_increment primary key,
                     content text not null
                 );
-                CREATE TABLE IF NOT EXISTS rule(
+                CREATE TABLE IF NOT EXISTS state(
                     id integer auto_increment primary key,
                     content text not null,
                     reference text
                 );
-                CREATE TABLE IF NOT EXISTS grammar(
+                CREATE TABLE IF NOT EXISTS transition(
                     id integer auto_increment primary key,
-                    element text not null,
-                    start_rule text not null,
-                    end_rule text not null
+                    alphabet text not null,
+                    start_state text not null,
+                    end_state text not null
                 );";
         $conn->exec($sql);
     }
@@ -53,142 +53,164 @@
     $destination = "documents/".$_FILES['field_txt']['name'];
     move_uploaded_file($_FILES['field_txt']['tmp_name'], $destination); 
 
-    include_once("classes/ElementDAO.php");
-    $obje = new ElementDAO();
-    include_once("classes/RuleDAO.php");
-    $objr = new RuleDAO();
-    include_once("classes/GrammarDAO.php");
-    $objr = new GrammarDAO();
-    
+    include_once("classes/AlphabetDAO.php");
+    $obja = new AlphabetDAO();
 
+    include_once("classes/StateDAO.php");
+    $objs = new StateDAO();
+
+    include_once("classes/TransitionDAO.php");
+    $objt = new TransitionDAO();
+     
     // Lendo o arquivo TXT
     $txt = file($destination);
     
+    $newalphabet = new Alphabet();
+    $bdalphabet = new AlphabetDAO();
+    $newstate = new State();
+    $bdstate = new StateDAO();
+    $newtransition = new Transition();
+    $bdtransition = new TransitionDAO();
 
-    //print_r($txt);
-    /*for ($i=0; $i < count($txt); $i++) { 
-        echo($i."<br>");
-        $array = str_split($txt[$i]);
-        foreach($array as $data) {
-            echo($data."<br>");
-            if($data == "\n") {
-                echo("Achei");
-            }
-        }
-    }
-    $array = str_split($txt[5]);
-    foreach($array as $data) {
-        echo($data."<br>");
-    }
-    parse_str($txt[0], $array);
-*/
-    $newelement = new Element();
-    $bdelement = new ElementDAO();
-    $newrule = new Rule();
-    $bdrule = new RuleDAO();
-    $newgrammar = new Grammar();
-    $bdgrammar = new GrammarDAO();
-
-    $newrule->setContent("S");
-    $bdrule->r_insert($newrule);
+    $newstate->setContent('S');
+    $newstate->setReference('S');
+    $bdstate->s_insert($newstate);
+    
     $r = 65;
-    $finalrule = array();
+    $finalstate = array();
+
+// fazer o tratamento para não usar de novo a regra S
 
     for ($i=0; $i < count($txt); $i++) {
         $array = str_split($txt[$i]);
         array_pop($array);
         array_pop($array);
         for ($j=0; $j < count($array); $j++) {
+            // Se na linha do texto contem uma gramática
             if($array[0] == '<') {
-                if($j == 0) {
-                    
+                // Armazena o estado de referência
+                $state = $array[1];
+                $alphabets = array();
+                $l = 0;
+                // Seleciona apenas os simbolos e os estados
+                for ($k=8; $k < count($array); $k++) {
+                    if($array[$k] != '<' && $array[$k] != '>' && $array[$k] != '|' && $array[$k] != ' '){
+                        $alphabets[$l] = $array[$k];
+                        $l++;
+                    }  
                 }
-            }
-            else {
-                if($obje->e_search($array[$j])==False) {
-                    if($j == 0) {
-                        $newrule->setContent(chr($r));
-                        $bdrule->r_insert($newrule);
+                $ei = 0;
+                $e = '';
+                for ($k=0; $k < count($alphabets); $k++) {
+                    //Verifica se encontrou um estado
+                    if(ord($alphabets[$k]) >= 65 && ord($alphabets[$k]) <= 90){
+                        // Verifica qual o estado novo para o estado de referência da gramática
+                        $statef = $objs->s_searchByReference($state);
+                        // Verifica se há um estado cadastrado que referencia o estado encontrado
+                        $sf = $objs->s_searchByReference($alphabets[$k]);
+                        if($sf == False) {
+                            // Cria um novo estado
+                            $newstate->setContent(chr($r));
+                            $newstate->setReference($alphabets[$k]);
+                            $bdstate->s_insert($newstate);
 
-                        $newelement->setContent($array[$j]);
-                        $bdelement->e_insert($newelement);
+                            // Se o simbolo ainda não foi cadastrado no banco
+                            if($obja->a_search($e)==False) {
+                                // Cria um novo simbolo
+                                $newalphabet->setContent($e);
+                                $bdalphabet->a_insert($newalphabet);
+                            }
+                                
+                            // Cria uma nova transição
+                            $newtransition->setAlphabet($e);
+                            $newtransition->setStartState($statef->getContent());
+                            $newtransition->setEndState(chr($r));
+                            $bdtransition->t_insert($newtransition);
 
-                        $newgrammar->setElement($array[$j]);
-                        $newgrammar->setStartRule('S');
-                        $newgrammar->setEndRule(chr($r));
-                        $bdgrammar->g_insert($newgrammar);
+                            $r++;
+                        }
+                        else {
+                            // Se o simbolo ainda não foi cadastrado no banco
+                            if($obja->a_search($e)==False) {
+                                // Cria um novo simbolo
+                                $newalphabet->setContent($e);
+                                $bdalphabet->a_insert($newalphabet);
+                            }
 
-                        $r++;
+                            // Cria uma nova transição
+                            $newtransition->setAlphabet($e);
+                            $newtransition->setStartState($statef->getContent());
+                            $newtransition->setEndState($sf->getContent());
+                            $bdtransition->t_insert($newtransition);
+                        }
+                        $ei = 0;
                     }
+                    // Se encontrou um simbolo
                     else {
-                        $newrule->setContent(chr($r));
-                        $bdrule->r_insert($newrule);
-
-                        $newelement->setContent($array[$j]);
-                        $bdelement->e_insert($newelement);
-
-                        $newgrammar->setElement($array[$j]);
-                        $r--;
-                        $newgrammar->setStartRule(chr($r));
-                        $r++;
-                        $newgrammar->setEndRule(chr($r));
-                        $bdgrammar->g_insert($newgrammar);
-
-                        $r++;
+                        // Se é o primeiro da sequencia, sobreescreve a variável
+                        if($ei == 0) {
+                            $e = $alphabets[$k];
+                            $ei = 1;
+                        }
+                        // Se não, concatena com o que já existe na variável
+                        else {
+                            $e = $e.$alphabets[$k];
+                        }
                     }
+                }
+                break;
+            }
+            // Se na linha do texto contem um token
+            else {
+                // Cria um novo estado
+                $newstate->setContent(chr($r));
+                $newstate->setReference(NULL);
+                $bdstate->s_insert($newstate);
+
+                // Se o simbolo ainda não foi cadastrado no banco
+                if($obja->a_search($array[$j])==False) {                  
+                    // Cria um novo simbolo
+                    $newalphabet->setContent($array[$j]);
+                    $bdalphabet->a_insert($newalphabet); 
+                }
+
+                // Se for o primeiro simbolo do token
+                if($j == 0) {
+                    // Cria uma nova transição
+                    $newtransition->setAlphabet($array[$j]);
+                    $newtransition->setStartState('S');
+                    $newtransition->setEndState(chr($r));
+                    $bdtransition->t_insert($newtransition);
                 }
                 else {
-                    if($j == 0) {
-                        $newrule->setContent(chr($r));
-                        $bdrule->r_insert($newrule);
-
-                        $newgrammar->setElement($array[$j]);
-                        $newgrammar->setStartRule('S');
-                        $newgrammar->setEndRule(chr($r));
-                        $bdgrammar->g_insert($newgrammar);
-
-                        $r++;
-                    }
-                    else {
-                        $newrule->setContent(chr($r));
-                        $bdrule->r_insert($newrule);
-
-                        $newgrammar->setElement($array[$j]);
-                        $r--;
-                        $newgrammar->setStartRule(chr($r));
-                        $r++;
-                        $newgrammar->setEndRule(chr($r));
-                        $bdgrammar->g_insert($newgrammar);
-
-                        $r++;
-                    }    
+                    // Cria uma nova transição
+                    $newtransition->setAlphabet($array[$j]);
+                    $r--;
+                    $newtransition->setStartState(chr($r));
+                    $r++;
+                    $newtransition->setEndState(chr($r));
+                    $bdtransition->t_insert($newtransition);
                 }
+
+                $r++;
             }
         }
         $r--;
-        $finalrule[] = chr($r);
+        $finalstate[] = chr($r);
         $r++;
     }
 
-    // Identificar os estados finais em um array para depois imprimir na primeira coluna da tabela
-
-    include_once("classes/ElementDAO.php");
-    include_once("classes/RuleDAO.php");
-    include_once("classes/GrammarDAO.php");
-    $obje = new ElementDAO();
-    $objr = new RuleDAO();
-    $objg = new GrammarDAO();
-    $liste = $obje->e_list();
-    $listr = $objr->r_list();
-    $listg = $objg->g_list();
+    $lista = $obja->a_list();
+    $lists = $objs->s_list();
+    $listt = $objt->t_list();
 
     $array = array();
-    foreach($listg as $grammar){
-        if(!isset($array[$grammar->getStartRule()][$grammar->getElement()])){
-            $array[$grammar->getStartRule()][$grammar->getElement()] = $grammar->getEndRule();
+    foreach($listt as $transition){
+        if(!isset($array[$transition->getStartState()][$transition->getAlphabet()])){
+            $array[$transition->getStartState()][$transition->getAlphabet()] = $transition->getEndState();
         }
         else {
-            $array[$grammar->getStartRule()][$grammar->getElement()] = $array[$grammar->getStartRule()][$grammar->getElement()].', '.$grammar->getEndRule();
+            $array[$transition->getStartState()][$transition->getAlphabet()] = $array[$transition->getStartState()][$transition->getAlphabet()].', '.$transition->getEndState();
         }
     }
 
@@ -199,40 +221,40 @@
             <tr>
                 <th>δ</th>
                 <?php
-                foreach($liste as $element){
+                foreach($lista as $alphabet){
                 ?>
-                    <th><?=$element->getContent()?></th>
+                    <th><?=$alphabet->getContent()?></th>
                 <?php
                 }
                 ?>
             </tr>
             <?php
-            foreach($listr as $rule){
+            foreach($lists as $state){
             ?>
                 <tr>
                     <?php
                     $flag = False;
-                    for ($i=0; $i < count($finalrule); $i++) {
-                        if($finalrule[$i] == $rule->getContent()){
+                    for ($i=0; $i < count($finalstate); $i++) {
+                        if($finalstate[$i] == $state->getContent()){
                             $flag = True;
                         }
                     }
                     if($flag == True) {
                     ?>
-                        <td>*<?=$rule->getContent()?></td>
+                        <td>*<?=$state->getContent()?></td>
                     <?php
                     }
                     else {
                     ?>
-                        <td><?=$rule->getContent()?></td>
+                        <td><?=$state->getContent()?></td>
                     <?php
                     }
                     ?>
                     <?php
-                    foreach($liste as $element){
-                        if(isset($array[$rule->getContent()][$element->getContent()])){
+                    foreach($lista as $alphabet){
+                        if(isset($array[$state->getContent()][$alphabet->getContent()])){
                     ?>
-                        <td><?=$array[$rule->getContent()][$element->getContent()]?></td>
+                        <td><?=$array[$state->getContent()][$alphabet->getContent()]?></td>
                     <?php
                         }
                         else {

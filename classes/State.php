@@ -1,8 +1,9 @@
 <?php
-    class Element{
+    class State{
 
         private $id;
         private $content;
+        private $reference;
 
 
         public function getId(){
@@ -20,7 +21,15 @@
         public function setContent($content){
             $this->content = $content;
         }
-        
+
+        public function getReference(){
+            return $this->reference;
+        }
+
+        public function setReference($reference){
+            $this->reference = $reference;
+        }
+
         public function validate(){
             $erros = array();
             return $erros;                                  

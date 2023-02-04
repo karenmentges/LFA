@@ -1,8 +1,8 @@
 <?php
     require_once "Connection.php";
-    require_once "Element.php";
+    require_once "Alphabet.php";
 
-    class ElementDAO{
+    class AlphabetDAO{
         
         public $connection;
 
@@ -10,11 +10,11 @@
             $this->connection = Connection::connect();
         }
 
-        public function e_list(){
+        public function a_list(){
             try{
-                $consulta = $this->connection->prepare("SELECT * FROM element ORDER BY id");
+                $consulta = $this->connection->prepare("SELECT * FROM alphabet ORDER BY id");
                 $consulta->execute();
-                $array = $consulta->fetchAll(PDO::FETCH_CLASS, "Element");
+                $array = $consulta->fetchAll(PDO::FETCH_CLASS, "Alphabet");
                 return $array;
             }
             catch(PDOException $e){
@@ -22,12 +22,12 @@
             }
         }
 
-        public function e_search($content){
+        public function a_search($content){
             try{
-                $consulta = $this->connection->prepare("SELECT * FROM element WHERE content = :content");
+                $consulta = $this->connection->prepare("SELECT * FROM alphabet WHERE content = :content");
                 $consulta->bindValue(":content", $content);
                 $consulta->execute();
-                $resultado = $consulta->fetchAll(PDO::FETCH_CLASS, "Element");
+                $resultado = $consulta->fetchAll(PDO::FETCH_CLASS, "Alphabet");
                 if(count($resultado) == 1)
                     return $resultado[0];
                 else
@@ -38,10 +38,10 @@
             }
         }   
 
-        public function e_insert(Element $element){
+        public function a_insert(Alphabet $alphabet){
             try{
-                $consulta = $this->connection->prepare("INSERT INTO element VALUES (NULL, :content)");
-                $consulta->bindValue(":content", $element->getContent());
+                $consulta = $this->connection->prepare("INSERT INTO alphabet VALUES (NULL, :content)");
+                $consulta->bindValue(":content", $alphabet->getContent());
                 return $consulta->execute();
             }
             catch(PDOException $e){
@@ -49,11 +49,11 @@
             }                
         }
 
-        public function e_update(Element $element){
+        public function a_update(Alphabet $alphabet){
             try{
-                $consulta = $this->connection->prepare("UPDATE element SET content=:content WHERE id=:id");
-                $consulta->bindValue(":content", $element->getContent());
-                $consulta->bindValue(":id", $element->getId());
+                $consulta = $this->connection->prepare("UPDATE alphabet SET content=:content WHERE id=:id");
+                $consulta->bindValue(":content", $alphabet->getContent());
+                $consulta->bindValue(":id", $alphabet->getId());
                 return $consulta->execute();
             }
             catch(PDOException $e){
@@ -61,9 +61,9 @@
             } 
         }
 
-        public function e_delete($id){
+        public function a_delete($id){
             try{
-                $consulta = $this->connection->prepare("DELETE FROM element WHERE id=:id");
+                $consulta = $this->connection->prepare("DELETE FROM alphabet WHERE id=:id");
                 $consulta->bindValue(":id", $id);
                 return $consulta->execute();
             }
