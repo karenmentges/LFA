@@ -17,7 +17,7 @@
 
     <?php
 
-    // Criando o banco de dados e a tabela 
+    // Criando o banco de dados e as tabelas
     try {
         $conn = new PDO("mysql:host=localhost", "root", "");
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -79,22 +79,99 @@
     $r = 65;
     $finalstate = array();
 
-// fazer o tratamento para não usar de novo a regra S
-
     for ($i=0; $i < count($txt); $i++) {
-        $array = str_split($txt[$i]);
-        array_pop($array);
-        array_pop($array);
-        for ($j=0; $j < count($array); $j++) {
-            // Se na linha do texto contem uma gramática
-            if($array[0] == '<') {
+        // Se na linha do texto contem uma gramática
+        if(substr($txt[$i], 0, 1) == '<') {
+            // Pular o estado S
+            if($r == 83) {
+                $r++;
+            }
+            // Armazena o estado de referência
+            $state = substr($txt[$i],1,1);
+            
+            $string = $txt[$i];
+            $string = substr($string,8,strlen($string));
+            $array = explode("|", $string);  
+            
+            for ($j=0; $j < count($array); $j++) {
+                $flag = 0;
+                $arr = str_split($array[$j]);
+                $s = NULL;
+                $a = NULL;
+                for ($k=0; $k < count($arr); $k++) {
+                    if($arr[$k] != '<' && $arr[$k] != '>' && $arr[$k] != ' ' && $arr[$k] != '\n'){
+                        if(ord($arr[$k]) >= 65 && ord($arr[$k]) <= 90) {
+                            $s = $s.$arr[$k];
+                        }
+                        else {
+                            $a = $a.$arr[$k];
+                        }
+                    }  
+                }
+
+                $s = trim($s);
+                $a = trim($a);
+
+                // Verifica qual o estado novo para o estado de referência da gramática
+                $statef = $objs->s_searchByReference($state);
+                // Verifica se há um estado cadastrado que referencia o estado encontrado
+                $sf = $objs->s_searchByReference($s);
+
+                if($s == NULL) {
+                    $flag = 1;
+                }
+                if($a == 'ε'){
+                    if(array_search($statef->getContent(), $finalstate) == NULL) {
+                        $finalstate[] = $statef->getContent();
+                    }
+                    break;
+                }
+
+                if($sf == False) {
+                    // Cria um novo estado
+                    $newstate->setContent(chr($r));
+                    $newstate->setReference($s);
+                    $bdstate->s_insert($newstate);
+
+                    // Se o simbolo ainda não foi cadastrado no banco
+                    if($obja->a_search($a)==False) {
+                        // Cria um novo simbolo
+                        $newalphabet->setContent($a);
+                        $bdalphabet->a_insert($newalphabet);
+                    }
+                            
+                    // Cria uma nova transição
+                    $newtransition->setAlphabet($a);
+                    $newtransition->setStartState($statef->getContent());
+                    $newtransition->setEndState(chr($r));
+                    $bdtransition->t_insert($newtransition);
+
+                    $r++;
+                }
+                else {
+                    // Se o simbolo ainda não foi cadastrado no banco
+                    if($obja->a_search($a)==False) {
+                        // Cria um novo simbolo
+                        $newalphabet->setContent($a);
+                        $bdalphabet->a_insert($newalphabet);
+                    }
+
+                    // Cria uma nova transição
+                    $newtransition->setAlphabet($a);
+                    $newtransition->setStartState($statef->getContent());
+                    $newtransition->setEndState($sf->getContent());
+                    $bdtransition->t_insert($newtransition);
+                }
+            }
+
+                /*
                 // Armazena o estado de referência
                 $state = $array[1];
                 $alphabets = array();
                 $l = 0;
                 // Seleciona apenas os simbolos e os estados
                 for ($k=8; $k < count($array); $k++) {
-                    if($array[$k] != '<' && $array[$k] != '>' && $array[$k] != '|' && $array[$k] != ' '){
+                    if($array[$k] != '<' && $array[$k] != '>' && $array[$k] != ' '){
                         $alphabets[$l] = $array[$k];
                         $l++;
                     }  
@@ -102,8 +179,12 @@
                 $ei = 0;
                 $e = '';
                 for ($k=0; $k < count($alphabets); $k++) {
+                    // Pular o estado S
+                    if($r == 83) {
+                        $r++;
+                    }
                     //Verifica se encontrou um estado
-                    if(ord($alphabets[$k]) >= 65 && ord($alphabets[$k]) <= 90){
+                    if(ord($alphabets[$k]) >= 65 && ord($alphabets[$k]) <= 90) {
                         // Verifica qual o estado novo para o estado de referência da gramática
                         $statef = $objs->s_searchByReference($state);
                         // Verifica se há um estado cadastrado que referencia o estado encontrado
@@ -158,10 +239,21 @@
                         }
                     }
                 }
-                break;
-            }
-            // Se na linha do texto contem um token
-            else {
+                */
+        }
+        // Se na linha do texto contem um token
+        else {
+            $array = str_split($txt[$i]);
+            array_pop($array);
+            array_pop($array);
+
+            for ($j=0; $j < count($array); $j++) {
+                // Pular o estado S
+                if($r == 83) {
+                    $r++;
+                }
+                $flag = 1;
+
                 // Cria um novo estado
                 $newstate->setContent(chr($r));
                 $newstate->setReference(NULL);
@@ -183,21 +275,45 @@
                     $bdtransition->t_insert($newtransition);
                 }
                 else {
-                    // Cria uma nova transição
-                    $newtransition->setAlphabet($array[$j]);
-                    $r--;
-                    $newtransition->setStartState(chr($r));
-                    $r++;
-                    $newtransition->setEndState(chr($r));
-                    $bdtransition->t_insert($newtransition);
+                    if($r == 84) {
+                        // Cria uma nova transição
+                        $newtransition->setAlphabet($array[$j]);
+                        $r--;
+                        $r--;
+                        $newtransition->setStartState(chr($r));
+                        $r++;
+                        $r++;
+                        $newtransition->setEndState(chr($r));
+                        $bdtransition->t_insert($newtransition);
+                    }
+                    else {
+                        // Cria uma nova transição
+                        $newtransition->setAlphabet($array[$j]);
+                        $r--;
+                        $newtransition->setStartState(chr($r));
+                        $r++;
+                        $newtransition->setEndState(chr($r));
+                        $bdtransition->t_insert($newtransition);
+                    }
                 }
-
+                $r++;           
+            }
+        }
+        if($flag == 1) {
+            if($r == 84) {
+                $r--;
+                $r--;
+                $finalstate[] = chr($r);
+                $r++;
+                $r++;
+            }
+            else {
+                $r--;
+                $finalstate[] = chr($r);
                 $r++;
             }
         }
-        $r--;
-        $finalstate[] = chr($r);
-        $r++;
+        
     }
 
     $lista = $obja->a_list();
