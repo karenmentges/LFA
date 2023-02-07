@@ -79,6 +79,8 @@
     $r = 65;
     $finalstate = array();
 
+    // Verificar os estados finais
+
     for ($i=0; $i < count($txt); $i++) {
         // Se na linha do texto contem uma gramática
         if(substr($txt[$i], 0, 1) == '<') {
@@ -386,6 +388,7 @@
             ?>
         </table>
     </div>
+    <a href="program.php"><button>VOLTAR</button></a>
     <br>
     <br>
     <br>
