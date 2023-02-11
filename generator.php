@@ -81,6 +81,7 @@
 
     // Verificar os estados finais
 
+    // Criação do AFND
     for ($i=0; $i < count($txt); $i++) {
         // Se na linha do texto contem uma gramática
         if(substr($txt[$i], 0, 1) == '<') {
@@ -111,24 +112,30 @@
                     }  
                 }
 
+                // Limpa os conjuntos de simbolos
                 $s = trim($s);
                 $a = trim($a);
+
+                if($s == NULL) {
+                    $s = "xxx";
+                }
 
                 // Verifica qual o estado novo para o estado de referência da gramática
                 $statef = $objs->s_searchByReference($state);
                 // Verifica se há um estado cadastrado que referencia o estado encontrado
                 $sf = $objs->s_searchByReference($s);
 
-                if($s == NULL) {
-                    $flag = 1;
-                }
+                
+                // Se a parte da gramática é um épsilon
                 if($a == 'ε'){
+                    // Adiciona o estado de referência como final
                     if(array_search($statef->getContent(), $finalstate) == NULL) {
                         $finalstate[] = $statef->getContent();
                     }
                     break;
                 }
 
+                // Se não há um estado cadastrado que referencia o estado encontrado
                 if($sf == False) {
                     // Cria um novo estado
                     $newstate->setContent(chr($r));
@@ -165,83 +172,12 @@
                     $bdtransition->t_insert($newtransition);
                 }
             }
-
-                /*
-                // Armazena o estado de referência
-                $state = $array[1];
-                $alphabets = array();
-                $l = 0;
-                // Seleciona apenas os simbolos e os estados
-                for ($k=8; $k < count($array); $k++) {
-                    if($array[$k] != '<' && $array[$k] != '>' && $array[$k] != ' '){
-                        $alphabets[$l] = $array[$k];
-                        $l++;
-                    }  
+            if($objs->s_searchByReference("xxx") != False) {
+                $sff = $objs->s_searchByReference("xxx");
+                if(array_search($sff->getContent(), $finalstate) == NULL) {
+                    $finalstate[] = $sff->getContent();
                 }
-                $ei = 0;
-                $e = '';
-                for ($k=0; $k < count($alphabets); $k++) {
-                    // Pular o estado S
-                    if($r == 83) {
-                        $r++;
-                    }
-                    //Verifica se encontrou um estado
-                    if(ord($alphabets[$k]) >= 65 && ord($alphabets[$k]) <= 90) {
-                        // Verifica qual o estado novo para o estado de referência da gramática
-                        $statef = $objs->s_searchByReference($state);
-                        // Verifica se há um estado cadastrado que referencia o estado encontrado
-                        $sf = $objs->s_searchByReference($alphabets[$k]);
-                        if($sf == False) {
-                            // Cria um novo estado
-                            $newstate->setContent(chr($r));
-                            $newstate->setReference($alphabets[$k]);
-                            $bdstate->s_insert($newstate);
-
-                            // Se o simbolo ainda não foi cadastrado no banco
-                            if($obja->a_search($e)==False) {
-                                // Cria um novo simbolo
-                                $newalphabet->setContent($e);
-                                $bdalphabet->a_insert($newalphabet);
-                            }
-                                
-                            // Cria uma nova transição
-                            $newtransition->setAlphabet($e);
-                            $newtransition->setStartState($statef->getContent());
-                            $newtransition->setEndState(chr($r));
-                            $bdtransition->t_insert($newtransition);
-
-                            $r++;
-                        }
-                        else {
-                            // Se o simbolo ainda não foi cadastrado no banco
-                            if($obja->a_search($e)==False) {
-                                // Cria um novo simbolo
-                                $newalphabet->setContent($e);
-                                $bdalphabet->a_insert($newalphabet);
-                            }
-
-                            // Cria uma nova transição
-                            $newtransition->setAlphabet($e);
-                            $newtransition->setStartState($statef->getContent());
-                            $newtransition->setEndState($sf->getContent());
-                            $bdtransition->t_insert($newtransition);
-                        }
-                        $ei = 0;
-                    }
-                    // Se encontrou um simbolo
-                    else {
-                        // Se é o primeiro da sequencia, sobreescreve a variável
-                        if($ei == 0) {
-                            $e = $alphabets[$k];
-                            $ei = 1;
-                        }
-                        // Se não, concatena com o que já existe na variável
-                        else {
-                            $e = $e.$alphabets[$k];
-                        }
-                    }
-                }
-                */
+            }
         }
         // Se na linha do texto contem um token
         else {
@@ -249,12 +185,14 @@
             array_pop($array);
             array_pop($array);
 
-            for ($j=0; $j < count($array); $j++) {
+            // Adiciona o último estado criado como final
+            $flag = 1;
+
+            for($j=0; $j < count($array); $j++) {
                 // Pular o estado S
                 if($r == 83) {
                     $r++;
-                }
-                $flag = 1;
+                }               
 
                 // Cria um novo estado
                 $newstate->setContent(chr($r));
@@ -305,17 +243,20 @@
             if($r == 84) {
                 $r--;
                 $r--;
-                $finalstate[] = chr($r);
+                if(array_search(chr($r), $finalstate) == NULL) {
+                    $finalstate[] = chr($r);
+                }
                 $r++;
                 $r++;
             }
             else {
                 $r--;
-                $finalstate[] = chr($r);
+                if(array_search(chr($r), $finalstate) == NULL) {
+                    $finalstate[] = chr($r);
+                }
                 $r++;
             }
         }
-        
     }
 
     $lista = $obja->a_list();
@@ -331,9 +272,97 @@
             $array[$transition->getStartState()][$transition->getAlphabet()] = $array[$transition->getStartState()][$transition->getAlphabet()].', '.$transition->getEndState();
         }
     }
+    
+
+    // Criação do AFD
+    $array2 = array();
+    $array3 = array();
+    foreach($lista as $alphabet) {
+        if(strlen($array['S'][$alphabet->getContent()]) > 1) {
+            $arr = explode(", ", $array['S'][$alphabet->getContent()]);
+            $array2['S'][$alphabet->getContent()] = '[';
+            for($a=0; $a<count($arr); $a++) {
+                $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].$arr[$a];
+            }
+            $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].']';
+        }
+        else {
+            $array2['S'][$alphabet->getContent()] = $array['S'][$alphabet->getContent()];
+        }
+    }
+    $array3[] = 'S';
+    /*
+    for($j=0; $j < count($array3); $j++) {
+        foreach($lista as $alphabet) {
+            echo($array3[$j]).' ';
+            echo($alphabet->getContent()).' ';
+            if(isset($array2[$array3[$j]][$alphabet->getContent()])){
+                $content = $array2[$array3[$j]][$alphabet->getContent()];
+                echo($content).'<br>';
+            }
+            else {
+                break;
+            }
+
+            if(strlen($content) > 1) {
+                if(substr($content, 0, 1) == '[') {
+                    $c = str_split($content);              
+                    array_shift($c);
+                    array_pop($c);
+                    $con = $content;
+                }
+                else {
+                    $c = explode(", ", $content);
+                    $con = '['.implode("", $c).']';
+                }
+                
+                for($k=0; $k < count($c); $k++) {  
+                    if(!isset($array2[$con][$alphabet->getContent()])){
+                        if(isset($array[$c[$k]][$alphabet->getContent()]) && $array[$c[$k]][$alphabet->getContent()] != NULL){
+                            $cont = $array[$c[$k]][$alphabet->getContent()];
+                            if(strlen($cont) > 1) {
+                                $cc = explode(", ", $cont);
+                                $cc = implode("", $cc);
+                                $array2[$con][$alphabet->getContent()] = '['.$cc.']';
+                            }
+                            else {
+                                $array2[$con][$alphabet->getContent()] = $cont;
+                            }
+                        }
+                    }
+                    else {
+                        if(isset($array[$c[$k]][$alphabet->getContent()]) && $array[$c[$k]][$alphabet->getContent()] != NULL){
+                            $cont = $array[$c[$k]][$alphabet->getContent()];
+                            if(strlen($cont) > 1) {
+                                $cc = explode(", ", $cont);
+                                $cc = implode("", $cc);
+                                $array2[$con][$alphabet->getContent()] = $array2[$con][$alphabet->getContent()].'['.$cc.']';
+                            }
+                            else {
+                                $array2[$con][$alphabet->getContent()] = $array2[$con][$alphabet->getContent()].$cont;
+                            }
+                        }
+                    }
+                }
+                if(array_key_exists($array2[$con][$alphabet->getContent()], $array3) == false) {
+                    $array3[] = $con;
+                }
+            }
+            else {
+                $array2[$content][$alphabet->getContent()] = $array[$content][$alphabet->getContent()];
+                if(array_key_exists($array2[$content][$alphabet->getContent()], $array3) == false) {
+                    $array3[] = $content;
+                }
+            }
+        }
+    }
+*/
+
+    //print_r($array2).'<br>';
+    //print_r($array3).'<br>';
+
 
     ?>
-    <br>
     <div class="table-wrapper">
         <table>
             <tr>
@@ -373,6 +402,62 @@
                         if(isset($array[$state->getContent()][$alphabet->getContent()])){
                     ?>
                         <td><?=$array[$state->getContent()][$alphabet->getContent()]?></td>
+                    <?php
+                        }
+                        else {
+                        ?>
+                            <td></td>
+                        <?php    
+                        }
+                    }
+                    ?>
+                </tr>
+            <?php
+            }
+            ?>
+        </table>
+    </div>
+    <br>
+    <br>
+    <div class="table-wrapper">
+        <table>
+            <tr>
+                <th>δ</th>
+                <?php
+                foreach($lista as $alphabet){
+                ?>
+                    <th><?=$alphabet->getContent()?></th>
+                <?php
+                }
+                ?>
+            </tr>
+            <?php
+            foreach($array3 as $state){
+            ?>
+                <tr>
+                    <?php
+                    $flag = False;
+                    for ($i=0; $i < count($finalstate); $i++) {
+                        if($finalstate[$i] == $state){
+                            $flag = True;
+                        }
+                    }
+                    if($flag == True) {
+                    ?>
+                        <td>*<?=$state?></td>
+                    <?php
+                    }
+                    else {
+                    ?>
+                        <td><?=$state?></td>
+                    <?php
+                    }
+                    ?>
+                    <?php
+                    foreach($lista as $alphabet){
+                        if(isset($array2[$state][$alphabet->getContent()])){
+                    ?>
+                        <td><?=$array2[$state][$alphabet->getContent()]?></td>
                     <?php
                         }
                         else {
