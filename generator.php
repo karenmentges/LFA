@@ -78,8 +78,7 @@
     
     $r = 65;
     $finalstate = array();
-
-    // Verificar os estados finais
+    
 
     // Criação do AFND
     for ($i=0; $i < count($txt); $i++) {
@@ -88,6 +87,10 @@
             // Pular o estado S
             if($r == 83) {
                 $r++;
+            }
+            if($r > 90) {
+                echo("Error: número de estados excedido!").'<br>';
+                break;
             }
             // Armazena o estado de referência
             $state = substr($txt[$i],1,1);
@@ -260,9 +263,11 @@
     }
 
     $lista = $obja->a_list();
+    $listaa = $obja->a_list();
     $lists = $objs->s_list();
     $listt = $objt->t_list();
 
+    // Montando a matriz
     $array = array();
     foreach($listt as $transition){
         if(!isset($array[$transition->getStartState()][$transition->getAlphabet()])){
@@ -272,96 +277,187 @@
             $array[$transition->getStartState()][$transition->getAlphabet()] = $array[$transition->getStartState()][$transition->getAlphabet()].', '.$transition->getEndState();
         }
     }
-    
+
 
     // Criação do AFD
     $array2 = array();
     $array3 = array();
     foreach($lista as $alphabet) {
-        if(strlen($array['S'][$alphabet->getContent()]) > 1) {
-            $arr = explode(", ", $array['S'][$alphabet->getContent()]);
-            $array2['S'][$alphabet->getContent()] = '[';
-            for($a=0; $a<count($arr); $a++) {
-                $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].$arr[$a];
-            }
-            $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].']';
-        }
-        else {
-            $array2['S'][$alphabet->getContent()] = $array['S'][$alphabet->getContent()];
-        }
-    }
-    $array3[] = 'S';
-    /*
-    for($j=0; $j < count($array3); $j++) {
-        foreach($lista as $alphabet) {
-            echo($array3[$j]).' ';
-            echo($alphabet->getContent()).' ';
-            if(isset($array2[$array3[$j]][$alphabet->getContent()])){
-                $content = $array2[$array3[$j]][$alphabet->getContent()];
-                echo($content).'<br>';
+        // Verifica se possui conteúdo na posição desejada
+        if(isset($array['S'][$alphabet->getContent()]) && $array['S'][$alphabet->getContent()] != NULL){
+            // Verifica se o conteúdo tem tamanho maior que 1
+            if(strlen($array['S'][$alphabet->getContent()]) > 1) {
+                $arr = explode(", ", $array['S'][$alphabet->getContent()]);
+                for($a=0; $a<count($arr); $a++) {
+                    // Se não existe conteúdo na posição
+                    if(!isset($array2['S'][$alphabet->getContent()])) {
+                        $array2['S'][$alphabet->getContent()] = $arr[$a];
+                    }
+                    // Se existe conteúdo na posição, concatena
+                    else {
+                        $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].$arr[$a];
+                    }
+                }
             }
             else {
-                break;
+                $array2['S'][$alphabet->getContent()] = $array['S'][$alphabet->getContent()];
+            }
+        }
+    }
+    // Insere o estado S no vetor para realizar o processo de determinização
+    $array3[] = 'S';
+    for($j=0; $j < count($array3); $j++) {
+        foreach($lista as $alphabet) {
+            // Verifica se possui conteúdo na posição desejada
+            if(isset($array2[$array3[$j]][$alphabet->getContent()])){
+                $content = $array2[$array3[$j]][$alphabet->getContent()];
+            }
+            else {
+                continue;
             }
 
+            // Verifica se o conteúdo tem tamanho maior que 1
             if(strlen($content) > 1) {
-                if(substr($content, 0, 1) == '[') {
-                    $c = str_split($content);              
-                    array_shift($c);
-                    array_pop($c);
-                    $con = $content;
+                // Divide a string e armazena em um vetor
+                $c = str_split($content);
+                for ($v=0; $v < count($c); $v++) { 
+                    // Se encontrar uma vírgula
+                    if($c[$v] == ',') {
+                        // Apaga o conteúdo do vetor
+                        unset($c[$v]);
+                    }
                 }
-                else {
-                    $c = explode(", ", $content);
-                    $con = '['.implode("", $c).']';
-                }
+                // Junta os elementos do vetor em uma string
+                $con = implode("", $c);
                 
-                for($k=0; $k < count($c); $k++) {  
-                    if(!isset($array2[$con][$alphabet->getContent()])){
-                        if(isset($array[$c[$k]][$alphabet->getContent()]) && $array[$c[$k]][$alphabet->getContent()] != NULL){
-                            $cont = $array[$c[$k]][$alphabet->getContent()];
-                            if(strlen($cont) > 1) {
-                                $cc = explode(", ", $cont);
-                                $cc = implode("", $cc);
-                                $array2[$con][$alphabet->getContent()] = '['.$cc.']';
-                            }
-                            else {
-                                $array2[$con][$alphabet->getContent()] = $cont;
+                // Se o estado ainda não existe no vetor de determinização
+                if(!in_array($con, $array3)) {
+                    for($k=0; $k < count($c); $k++) { 
+                        foreach($listaa as $aalphabet) {
+                            if(isset($array[$c[$k]][$aalphabet->getContent()]) && $array[$c[$k]][$aalphabet->getContent()] != NULL){
+                                $cont = $array[$c[$k]][$aalphabet->getContent()];
+                                // Verifica se o conteúdo tem tamanho maior que 1
+                                if(strlen($cont) > 1) {
+                                    $cc = explode(", ", $cont);
+                                    for ($v=0; $v < count($cc); $v++) { 
+                                        // Se a  posição da matriz não possui conteúdo
+                                        if(!isset($array2[$con][$aalphabet->getContent()])) {
+                                            $array2[$con][$aalphabet->getContent()] = $cc[$v];
+                                        }
+                                        else { 
+                                            $vv = str_split($array2[$con][$aalphabet->getContent()]);
+                                            $have = 0;
+                                            for ($z=0; $z < count($vv); $z++) { 
+                                                // Verifica se o estado encontrado já não existe nessa posição
+                                                if($cc[$v] == $vv[$z]) {
+                                                    $have = 1;
+                                                }
+                                            }
+                                            // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
+                                            if($have == 0) {
+                                                $array2[$con][$aalphabet->getContent()] = $array2[$con][$aalphabet->getContent()].$cc[$v];
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    // Se a  posição da matriz não possui conteúdo
+                                    if(!isset($array2[$con][$aalphabet->getContent()])) {
+                                        $array2[$con][$aalphabet->getContent()] = $cont;
+                                    }
+                                    else {
+                                        $vv = str_split($array2[$con][$aalphabet->getContent()]);
+                                        $have = 0;
+                                        for ($z=0; $z < count($vv); $z++) { 
+                                            // Verifica se o estado encontrado já não existe nessa posição
+                                            if($cont == $vv[$z]) {
+                                                $have = 1;
+                                            }
+                                        }
+                                        // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
+                                        if($have == 0) {
+                                            $array2[$con][$aalphabet->getContent()] = $array2[$con][$aalphabet->getContent()].$cont;
+                                        }
+                                    }  
+                                }
                             }
                         }
                     }
-                    else {
-                        if(isset($array[$c[$k]][$alphabet->getContent()]) && $array[$c[$k]][$alphabet->getContent()] != NULL){
-                            $cont = $array[$c[$k]][$alphabet->getContent()];
-                            if(strlen($cont) > 1) {
-                                $cc = explode(", ", $cont);
-                                $cc = implode("", $cc);
-                                $array2[$con][$alphabet->getContent()] = $array2[$con][$alphabet->getContent()].'['.$cc.']';
-                            }
-                            else {
-                                $array2[$con][$alphabet->getContent()] = $array2[$con][$alphabet->getContent()].$cont;
-                            }
-                        }
-                    }
-                }
-                if(array_key_exists($array2[$con][$alphabet->getContent()], $array3) == false) {
                     $array3[] = $con;
                 }
             }
             else {
-                $array2[$content][$alphabet->getContent()] = $array[$content][$alphabet->getContent()];
-                if(array_key_exists($array2[$content][$alphabet->getContent()], $array3) == false) {
+                // Se o estado ainda não existe no vetor de determinização
+                if(!in_array($content, $array3)) {
+                    foreach($listaa as $aalphabet) {
+                        if(isset($array[$content][$aalphabet->getContent()]) && $array[$content][$aalphabet->getContent()] != NULL){
+                            $cont = $array[$content][$aalphabet->getContent()];
+                            // Verifica se o conteúdo tem tamanho maior que 1
+                            if(strlen($cont) > 1) {
+                                $cc = explode(", ", $cont);
+                                for ($v=0; $v < count($cc); $v++) {
+                                    // Se a  posição da matriz não possui conteúdo
+                                    if(!isset($array2[$content][$aalphabet->getContent()])) {
+                                        $array2[$content][$aalphabet->getContent()] = $cc[$v];
+                                    }
+                                    else {
+                                        $vv = str_split($array2[$content][$aalphabet->getContent()]);
+                                        $have = 0;
+                                        for ($z=0; $z < count($vv); $z++) { 
+                                            // Verifica se o estado encontrado já não existe nessa posição
+                                            if($cc[$v] == $vv[$z]) {
+                                                $have = 1;
+                                            }
+                                        }
+                                        // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
+                                        if($have == 0) {
+                                            $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].$cc[$v];
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                // Se a  posição da matriz não possui conteúdo
+                                if(!isset($array2[$content][$aalphabet->getContent()])) {
+                                    $array2[$content][$aalphabet->getContent()] = $cont;
+                                }
+                                else {
+                                    $vv = str_split($array2[$content][$aalphabet->getContent()]);
+                                    $have = 0;
+                                    for ($z=0; $z < count($vv); $z++) { 
+                                        // Verifica se o estado encontrado já não existe nessa posição
+                                        if($cont == $vv[$z]) {
+                                            $have = 1;
+                                        }
+                                    }
+                                    // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
+                                    if($have == 0) {
+                                        $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].$cont;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     $array3[] = $content;
                 }
             }
         }
     }
-*/
 
-    //print_r($array2).'<br>';
-    //print_r($array3).'<br>';
+    // Verifica quais dos estados novos possuem um estado final e insere no vetor de estados finais
+    for ($z=0; $z < count($array3); $z++) { 
+        if($array3[$z] > 1) {
+            $a = str_split($array3[$z]);
+        }
+        for ($y=0; $y < count($a); $y++) { 
+            if(in_array($a[$y], $finalstate) && !in_array($array3[$z], $finalstate)) {
+                $finalstate[] = $array3[$z];
+            }
+        }
+    }
 
 
+    // Impressão das tabelas
     ?>
     <div class="table-wrapper">
         <table>
@@ -443,22 +539,43 @@
                         }
                     }
                     if($flag == True) {
+                        if(strlen($state) > 1) {
                     ?>
-                        <td>*<?=$state?></td>
+                            <td>*<?='['.$state.']'?></td>
                     <?php
+                        }
+                        else {
+                    ?>
+                            <td>*<?=$state?></td>
+                    <?php
+                        }
                     }
                     else {
+                        if(strlen($state) > 1) {
                     ?>
-                        <td><?=$state?></td>
+                            <td><?='['.$state.']'?></td>
                     <?php
+                        }
+                        else {
+                    ?>
+                            <td><?=$state?></td>
+                    <?php
+                        }
                     }
                     ?>
                     <?php
                     foreach($lista as $alphabet){
                         if(isset($array2[$state][$alphabet->getContent()])){
+                            if(strlen($array2[$state][$alphabet->getContent()]) > 1) {
                     ?>
-                        <td><?=$array2[$state][$alphabet->getContent()]?></td>
+                                <td><?='['.$array2[$state][$alphabet->getContent()].']'?></td>
                     <?php
+                            }
+                            else {
+                    ?>
+                                <td><?=$array2[$state][$alphabet->getContent()]?></td>
+                    <?php
+                            } 
                         }
                         else {
                         ?>
