@@ -84,7 +84,7 @@
     for ($i=0; $i < count($txt); $i++) {
         // Se na linha do texto contem uma gramática
         if(substr($txt[$i], 0, 1) == '<') {
-            // Pular o estado S
+            // Pula o estado S
             if($r == 83) {
                 $r++;
             }
@@ -100,10 +100,9 @@
             $array = explode("|", $string);  
             
             for ($j=0; $j < count($array); $j++) {
-                $flag = 0;
                 $arr = str_split($array[$j]);
-                $s = NULL;
-                $a = NULL;
+                $s = NULL;   // estados
+                $a = NULL;   // simbolos  
                 for ($k=0; $k < count($arr); $k++) {
                     if($arr[$k] != '<' && $arr[$k] != '>' && $arr[$k] != ' ' && $arr[$k] != '\n'){
                         if(ord($arr[$k]) >= 65 && ord($arr[$k]) <= 90) {
@@ -115,10 +114,11 @@
                     }  
                 }
 
-                // Limpa os conjuntos de simbolos
+                // Limpa os conjuntos de estados e simbolos
                 $s = trim($s);
                 $a = trim($a);
 
+                // Se não houver estado
                 if($s == NULL) {
                     $s = "xxx";
                 }
@@ -135,7 +135,7 @@
                     if(array_search($statef->getContent(), $finalstate) == NULL) {
                         $finalstate[] = $statef->getContent();
                     }
-                    break;
+                    continue;
                 }
 
                 // Se não há um estado cadastrado que referencia o estado encontrado
@@ -175,8 +175,10 @@
                     $bdtransition->t_insert($newtransition);
                 }
             }
+            // Se existe um estado final no banco
             if($objs->s_searchByReference("xxx") != False) {
                 $sff = $objs->s_searchByReference("xxx");
+                // Se ainda não se encontra no vetor de estados finais
                 if(array_search($sff->getContent(), $finalstate) == NULL) {
                     $finalstate[] = $sff->getContent();
                 }
@@ -184,18 +186,23 @@
         }
         // Se na linha do texto contem um token
         else {
+            // Separa a string em um vetor, e elimina os dois ultimos elementos
             $array = str_split($txt[$i]);
             array_pop($array);
             array_pop($array);
 
-            // Adiciona o último estado criado como final
+            // Indica que último estado criado é um estado final
             $flag = 1;
 
             for($j=0; $j < count($array); $j++) {
-                // Pular o estado S
+                // Pula o estado S
                 if($r == 83) {
                     $r++;
-                }               
+                }    
+                if($r > 90) {
+                    echo("Error: número de estados excedido!").'<br>';
+                    break;
+                }           
 
                 // Cria um novo estado
                 $newstate->setContent(chr($r));
@@ -218,6 +225,7 @@
                     $bdtransition->t_insert($newtransition);
                 }
                 else {
+                    // Se for o estado T
                     if($r == 84) {
                         // Cria uma nova transição
                         $newtransition->setAlphabet($array[$j]);
@@ -239,10 +247,13 @@
                         $bdtransition->t_insert($newtransition);
                     }
                 }
+
                 $r++;           
             }
         }
+        // Adiciona o ultimo estado criado no vetor de estados finais
         if($flag == 1) {
+            // Se for o estado T
             if($r == 84) {
                 $r--;
                 $r--;
@@ -280,8 +291,8 @@
 
 
     // Criação do AFD
-    $array2 = array();
-    $array3 = array();
+    $array2 = array();  // Matriz do AFD
+    $array3 = array();  // Vetor com os estado do AFD
     foreach($lista as $alphabet) {
         // Verifica se possui conteúdo na posição desejada
         if(isset($array['S'][$alphabet->getContent()]) && $array['S'][$alphabet->getContent()] != NULL){
@@ -459,6 +470,7 @@
 
     // Impressão das tabelas
     ?>
+    <H3>AFND</H3>
     <div class="table-wrapper">
         <table>
             <tr>
@@ -516,6 +528,7 @@
     <br>
     <br>
     <div class="table-wrapper">
+        <H3>AFD</H3>
         <table>
             <tr>
                 <th>δ</th>
