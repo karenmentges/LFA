@@ -125,10 +125,20 @@
 
                 // Verifica qual o estado novo para o estado de referência da gramática
                 $statef = $objs->s_searchByReference($state);
+                if($statef == False) {
+                    // Cria um novo estado
+                    $newstate->setContent(chr($r));
+                    $newstate->setReference($state);
+                    $bdstate->s_insert($newstate);
+
+                    $r++;
+
+                    $statef = $objs->s_searchByReference($state);
+                }
+
                 // Verifica se há um estado cadastrado que referencia o estado encontrado
                 $sf = $objs->s_searchByReference($s);
 
-                
                 // Se a parte da gramática é um épsilon
                 if($a == 'ε'){
                     // Adiciona o estado de referência como final
@@ -252,7 +262,7 @@
             }
         }
         // Adiciona o ultimo estado criado no vetor de estados finais
-        if($flag == 1) {
+        if(isset($flag) && $flag == 1) {
             // Se for o estado T
             if($r == 84) {
                 $r--;
@@ -467,6 +477,70 @@
         }
     }
 
+/* Não precisa?
+    // Eliminação de inacessíveis (VERIFICAR)
+    $array4 = array();  // Vetor com os estado acessívei
+    $array4[] = 'S';    
+    for ($z=0; $z < count($array4); $z++) { 
+        foreach($lista as $alphabet) {
+            if(isset($array2[$array4[$z]][$alphabet->getContent()])) {
+                if(!in_array($array2[$array4[$z]][$alphabet->getContent()], $array4)) {
+                    $array4[] = $array2[$array4[$z]][$alphabet->getContent()];
+                }
+            }
+        }
+    }
+    for ($z=0; $z < count($array4); $z++){
+        if(!in_array($array4[$z], $array3)) {
+            echo("tem ");
+            echo($array4[$z]);
+            echo('<br>');
+        }
+    }
+*/
+
+    // Eliminação de estados mortos (Não testado)
+    $array4 = array();  // Vetor com estados não mortos
+    $length = 0;
+    for ($z=0; $z < count($array3); $z++) { 
+        if (in_array($array3[$z], $finalstate)) {
+            $array4[] = $array3[$z];  
+        }
+    }
+    while ($length != count($array4)) {
+        $length = count($array4);
+        foreach($array3 as $state){
+            foreach($lista as $alphabet) {
+                if(isset($array2[$state][$alphabet->getContent()])) {
+                    if(in_array($array2[$state][$alphabet->getContent()], $array4)) {
+                        if(!in_array($state, $array4)) {
+                            $array4[] = $state;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for ($z=0; $z < count($array3); $z++) { 
+        if(!in_array($array3[$z], $array4)) {
+            unset($array3[$z]);
+            foreach($lista as $alphabet) {
+                unset($array2[$array3[$z]][$alphabet->getContent()]);
+            }
+        }
+    }
+
+
+    // Adicionando estado de erro 
+    $array3[] = 'XX';
+    foreach($array3 as $state){
+        foreach($lista as $alphabet) {
+            if(!isset($array2[$state][$alphabet->getContent()])) {
+                $array2[$state][$alphabet->getContent()] = 'XX';
+            }
+        }
+    }
+    
 
     // Impressão das tabelas
     ?>
@@ -564,7 +638,7 @@
                         }
                     }
                     else {
-                        if(strlen($state) > 1) {
+                        if(strlen($state) > 1 && $state != 'XX') {
                     ?>
                             <td><?='['.$state.']'?></td>
                     <?php
@@ -579,7 +653,7 @@
                     <?php
                     foreach($lista as $alphabet){
                         if(isset($array2[$state][$alphabet->getContent()])){
-                            if(strlen($array2[$state][$alphabet->getContent()]) > 1) {
+                            if(strlen($array2[$state][$alphabet->getContent()]) > 1 && $array2[$state][$alphabet->getContent()] != 'XX') {
                     ?>
                                 <td><?='['.$array2[$state][$alphabet->getContent()].']'?></td>
                     <?php
