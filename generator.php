@@ -76,21 +76,26 @@
     $newstate->setReference('S');
     $bdstate->s_insert($newstate);
     
-    $r = 65;
+    $prefix = '';
+    $suffix = 65;
     $finalstate = array();
-    
 
     // Criação do AFND
     for ($i=0; $i < count($txt); $i++) {
         // Se na linha do texto contem uma gramática
         if(substr($txt[$i], 0, 1) == '<') {
             // Pula o estado S
-            if($r == 83) {
-                $r++;
+            if($suffix == 83 && $prefix == '') {
+                $suffix++;
             }
-            if($r > 90) {
-                echo("Error: número de estados excedido!").'<br>';
-                break;
+            if($suffix > 90) {
+                $suffix = 65;
+                if($prefix == '') {
+                    $prefix = 65;
+                }
+                else {
+                    $prefix++;
+                }
             }
             // Armazena o estado de referência
             $state = substr($txt[$i],1,1);
@@ -127,11 +132,16 @@
                 $statef = $objs->s_searchByReference($state);
                 if($statef == False) {
                     // Cria um novo estado
-                    $newstate->setContent(chr($r));
+                    if($prefix == '') {
+                        $newstate->setContent(chr($suffix));
+                    }
+                    else {
+                        $newstate->setContent(chr($prefix).'_'.chr($suffix));
+                    }
                     $newstate->setReference($state);
                     $bdstate->s_insert($newstate);
 
-                    $r++;
+                    $suffix++;
 
                     $statef = $objs->s_searchByReference($state);
                 }
@@ -151,7 +161,12 @@
                 // Se não há um estado cadastrado que referencia o estado encontrado
                 if($sf == False) {
                     // Cria um novo estado
-                    $newstate->setContent(chr($r));
+                    if($prefix == '') {
+                        $newstate->setContent(chr($suffix));
+                    }
+                    else {
+                        $newstate->setContent(chr($prefix).'_'.chr($suffix));
+                    }
                     $newstate->setReference($s);
                     $bdstate->s_insert($newstate);
 
@@ -165,10 +180,15 @@
                     // Cria uma nova transição
                     $newtransition->setAlphabet($a);
                     $newtransition->setStartState($statef->getContent());
-                    $newtransition->setEndState(chr($r));
+                    if($prefix == '') {
+                        $newtransition->setEndState(chr($suffix));
+                    }
+                    else {
+                        $newtransition->setEndState(chr($prefix).'_'.chr($suffix));
+                    }
                     $bdtransition->t_insert($newtransition);
 
-                    $r++;
+                    $suffix++;
                 }
                 else {
                     // Se o simbolo ainda não foi cadastrado no banco
@@ -205,17 +225,27 @@
             $flag = 1;
 
             for($j=0; $j < count($array); $j++) {
-                // Pula o estado S
-                if($r == 83) {
-                    $r++;
-                }    
-                if($r > 90) {
-                    echo("Error: número de estados excedido!").'<br>';
-                    break;
-                }           
+                // Pula o estado S  
+                if($suffix == 83 && $prefix == '') {
+                    $suffix++;
+                }
+                if($suffix > 90) {
+                    $suffix = 65;
+                    if($prefix == '') {
+                        $prefix = 65;
+                    }
+                    else {
+                        $prefix++;
+                    }
+                }  
 
                 // Cria um novo estado
-                $newstate->setContent(chr($r));
+                if($prefix == '') {
+                    $newstate->setContent(chr($suffix));
+                }
+                else {
+                    $newstate->setContent(chr($prefix).'_'.chr($suffix));
+                }
                 $newstate->setReference(NULL);
                 $bdstate->s_insert($newstate);
 
@@ -231,54 +261,107 @@
                     // Cria uma nova transição
                     $newtransition->setAlphabet($array[$j]);
                     $newtransition->setStartState('S');
-                    $newtransition->setEndState(chr($r));
+                    if($prefix == '') {
+                        $newtransition->setEndState(chr($suffix));
+                    }
+                    else {
+                        $newtransition->setEndState(chr($prefix).'_'.chr($suffix));
+                    }
                     $bdtransition->t_insert($newtransition);
                 }
                 else {
                     // Se for o estado T
-                    if($r == 84) {
+                    if($suffix == 84) {
                         // Cria uma nova transição
                         $newtransition->setAlphabet($array[$j]);
-                        $r--;
-                        $r--;
-                        $newtransition->setStartState(chr($r));
-                        $r++;
-                        $r++;
-                        $newtransition->setEndState(chr($r));
+                        if($prefix == '') {
+                            $suffix--;
+                            $suffix--;
+                            $newtransition->setStartState(chr($suffix));
+                            $suffix++;
+                            $suffix++;
+                            $newtransition->setEndState(chr($suffix));
+                        }
+                        else {
+                            $suffix--;
+                            $newtransition->setStartState(chr($prefix).'_'.chr($suffix));
+                            $suffix++;
+                            $newtransition->setEndState(chr($prefix).'_'.chr($suffix));
+                        }
                         $bdtransition->t_insert($newtransition);
                     }
                     else {
                         // Cria uma nova transição
                         $newtransition->setAlphabet($array[$j]);
-                        $r--;
-                        $newtransition->setStartState(chr($r));
-                        $r++;
-                        $newtransition->setEndState(chr($r));
+                        if($prefix == '') {
+                            $suffix--;
+                            $newtransition->setStartState(chr($suffix));
+                            $suffix++;
+                            $newtransition->setEndState(chr($suffix));
+                        }
+                        else {
+                            if($suffix == 65) {
+                                if($prefix == 65) {
+                                    $newtransition->setStartState(chr(90));
+                                    $newtransition->setEndState(chr(65).'_'.chr(65));
+                                }
+                                else {
+                                    $prefix--;
+                                    $newtransition->setStartState(chr($prefix).'_'.chr(90));
+                                    $prefix++;
+                                    $newtransition->setEndState(chr($prefix).'_'.chr(65));
+                                }
+                            }
+                            else {
+                                $suffix--;
+                                $newtransition->setStartState(chr($prefix).'_'.chr($suffix));
+                                $suffix++;
+                                $newtransition->setEndState(chr($prefix).'_'.chr($suffix));
+                            }
+                        }
                         $bdtransition->t_insert($newtransition);
                     }
                 }
 
-                $r++;           
+                $suffix++;           
             }
         }
         // Adiciona o ultimo estado criado no vetor de estados finais
         if(isset($flag) && $flag == 1) {
             // Se for o estado T
-            if($r == 84) {
-                $r--;
-                $r--;
-                if(array_search(chr($r), $finalstate) == NULL) {
-                    $finalstate[] = chr($r);
+            if($suffix == 84) {
+                if($prefix == '') {
+                    $suffix--;
+                    $suffix--;
+                    if(array_search(chr($suffix), $finalstate) == NULL) {
+                        $finalstate[] = chr($suffix);
+                    }
+                    $suffix++;
+                    $suffix++;
                 }
-                $r++;
-                $r++;
+                else {
+                    $suffix--;
+                    if(array_search((chr($prefix).'_'.chr($suffix)), $finalstate) == NULL) {
+                        $finalstate[] = chr($prefix).'_'.chr($suffix);
+                    }
+                    $suffix++;
+                }
             }
             else {
-                $r--;
-                if(array_search(chr($r), $finalstate) == NULL) {
-                    $finalstate[] = chr($r);
+                if($prefix == '') {
+                    $suffix--;
+                    if(array_search(chr($suffix), $finalstate) == NULL) {
+                        $finalstate[] = chr($suffix);
+                    }
+                    $suffix++;
                 }
-                $r++;
+                else {
+                    $suffix--;
+                    if(array_search((chr($prefix).'_'.chr($suffix)), $finalstate) == NULL) {
+                        $finalstate[] = chr($prefix).'_'.chr($suffix);
+                    }
+                    $suffix++;
+                }
             }
         }
     }
@@ -316,7 +399,7 @@
                     }
                     // Se existe conteúdo na posição, concatena
                     else {
-                        $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].$arr[$a];
+                        $array2['S'][$alphabet->getContent()] = $array2['S'][$alphabet->getContent()].'.'.$arr[$a];
                     }
                 }
             }
@@ -340,19 +423,10 @@
             // Verifica se o conteúdo tem tamanho maior que 1
             if(strlen($content) > 1) {
                 // Divide a string e armazena em um vetor
-                $c = str_split($content);
-                for ($v=0; $v < count($c); $v++) { 
-                    // Se encontrar uma vírgula
-                    if($c[$v] == ',') {
-                        // Apaga o conteúdo do vetor
-                        unset($c[$v]);
-                    }
-                }
-                // Junta os elementos do vetor em uma string
-                $con = implode("", $c);
+                $c = explode('.', $content);
                 
                 // Se o estado ainda não existe no vetor de determinização
-                if(!in_array($con, $array3)) {
+                if(!in_array($content, $array3)) {
                     for($k=0; $k < count($c); $k++) { 
                         foreach($listaa as $aalphabet) {
                             if(isset($array[$c[$k]][$aalphabet->getContent()]) && $array[$c[$k]][$aalphabet->getContent()] != NULL){
@@ -362,11 +436,11 @@
                                     $cc = explode(", ", $cont);
                                     for ($v=0; $v < count($cc); $v++) { 
                                         // Se a  posição da matriz não possui conteúdo
-                                        if(!isset($array2[$con][$aalphabet->getContent()])) {
-                                            $array2[$con][$aalphabet->getContent()] = $cc[$v];
+                                        if(!isset($array2[$content][$aalphabet->getContent()])) {
+                                            $array2[$content][$aalphabet->getContent()] = $cc[$v];
                                         }
                                         else { 
-                                            $vv = str_split($array2[$con][$aalphabet->getContent()]);
+                                            $vv = str_split($array2[$content][$aalphabet->getContent()]);
                                             $have = 0;
                                             for ($z=0; $z < count($vv); $z++) { 
                                                 // Verifica se o estado encontrado já não existe nessa posição
@@ -376,18 +450,18 @@
                                             }
                                             // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
                                             if($have == 0) {
-                                                $array2[$con][$aalphabet->getContent()] = $array2[$con][$aalphabet->getContent()].$cc[$v];
+                                                $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].'.'.$cc[$v];
                                             }
                                         }
                                     }
                                 }
                                 else {
                                     // Se a  posição da matriz não possui conteúdo
-                                    if(!isset($array2[$con][$aalphabet->getContent()])) {
-                                        $array2[$con][$aalphabet->getContent()] = $cont;
+                                    if(!isset($array2[$content][$aalphabet->getContent()])) {
+                                        $array2[$content][$aalphabet->getContent()] = $cont;
                                     }
                                     else {
-                                        $vv = str_split($array2[$con][$aalphabet->getContent()]);
+                                        $vv = str_split($array2[$content][$aalphabet->getContent()]);
                                         $have = 0;
                                         for ($z=0; $z < count($vv); $z++) { 
                                             // Verifica se o estado encontrado já não existe nessa posição
@@ -397,14 +471,14 @@
                                         }
                                         // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
                                         if($have == 0) {
-                                            $array2[$con][$aalphabet->getContent()] = $array2[$con][$aalphabet->getContent()].$cont;
+                                            $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].'.'.$cont;
                                         }
                                     }  
                                 }
                             }
                         }
                     }
-                    $array3[] = $con;
+                    $array3[] = $content;
                 }
             }
             else {
@@ -432,7 +506,7 @@
                                         }
                                         // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
                                         if($have == 0) {
-                                            $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].$cc[$v];
+                                            $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].'.'.$cc[$v];
                                         }
                                     }
                                 }
@@ -453,7 +527,7 @@
                                     }
                                     // Se não existe, concatena o conteúdo da posição com o estado a ser inserido
                                     if($have == 0) {
-                                        $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].$cont;
+                                        $array2[$content][$aalphabet->getContent()] = $array2[$content][$aalphabet->getContent()].'.'.$cont;
                                     }
                                 }
                             }
@@ -476,30 +550,9 @@
             }
         }
     }
+    
 
-/* Não precisa?
-    // Eliminação de inacessíveis (VERIFICAR)
-    $array4 = array();  // Vetor com os estado acessívei
-    $array4[] = 'S';    
-    for ($z=0; $z < count($array4); $z++) { 
-        foreach($lista as $alphabet) {
-            if(isset($array2[$array4[$z]][$alphabet->getContent()])) {
-                if(!in_array($array2[$array4[$z]][$alphabet->getContent()], $array4)) {
-                    $array4[] = $array2[$array4[$z]][$alphabet->getContent()];
-                }
-            }
-        }
-    }
-    for ($z=0; $z < count($array4); $z++){
-        if(!in_array($array4[$z], $array3)) {
-            echo("tem ");
-            echo($array4[$z]);
-            echo('<br>');
-        }
-    }
-*/
-
-    // Eliminação de estados mortos (Não testado)
+    /* // Eliminação de estados mortos (Não testado)
     $array4 = array();  // Vetor com estados não mortos
     $length = 0;
     for ($z=0; $z < count($array3); $z++) { 
@@ -528,15 +581,15 @@
                 unset($array2[$array3[$z]][$alphabet->getContent()]);
             }
         }
-    }
+    } */
 
 
     // Adicionando estado de erro 
-    $array3[] = 'XX';
+    $array3[] = 'xx';
     foreach($array3 as $state){
         foreach($lista as $alphabet) {
             if(!isset($array2[$state][$alphabet->getContent()])) {
-                $array2[$state][$alphabet->getContent()] = 'XX';
+                $array2[$state][$alphabet->getContent()] = 'xx';
             }
         }
     }
@@ -569,21 +622,24 @@
                         }
                     }
                     if($flag == True) {
+                        $stateTable = implode("", explode("_", $state->getContent()));
                     ?>
-                        <td>*<?=$state->getContent()?></td>
+                        <td>*<?= $stateTable?></td>
                     <?php
                     }
                     else {
+                        $stateTable = implode("", explode("_", $state->getContent()));
                     ?>
-                        <td><?=$state->getContent()?></td>
+                        <td><?= $stateTable?></td>
                     <?php
                     }
                     ?>
                     <?php
                     foreach($lista as $alphabet){
                         if(isset($array[$state->getContent()][$alphabet->getContent()])){
+                            $contentTable = implode("", explode("_", $array[$state->getContent()][$alphabet->getContent()]));
                     ?>
-                        <td><?=$array[$state->getContent()][$alphabet->getContent()]?></td>
+                        <td><?=$contentTable?></td>
                     <?php
                         }
                         else {
@@ -626,26 +682,30 @@
                         }
                     }
                     if($flag == True) {
-                        if(strlen($state) > 1) {
+                        if(count(explode(".", $state)) > 1) {
+                            $stateTable = implode("", explode("_", implode("", explode(".", $state))));
                     ?>
-                            <td>*<?='['.$state.']'?></td>
+                            <td>*<?='['.$stateTable.']'?></td>
                     <?php
                         }
                         else {
+                            $stateTable = implode("", explode("_", implode("", explode(".", $state))));
                     ?>
-                            <td>*<?=$state?></td>
+                            <td>*<?=$stateTable?></td>
                     <?php
                         }
                     }
                     else {
-                        if(strlen($state) > 1 && $state != 'XX') {
+                        if(count(explode(".", $state)) > 1 && $state != 'xx') {
+                            $stateTable = implode("", explode("_", implode("", explode(".", $state))));
                     ?>
-                            <td><?='['.$state.']'?></td>
+                            <td><?='['.$stateTable.']'?></td>
                     <?php
                         }
                         else {
+                            $stateTable = implode("", explode("_", implode("", explode(".", $state))));
                     ?>
-                            <td><?=$state?></td>
+                            <td><?=$stateTable?></td>
                     <?php
                         }
                     }
@@ -653,14 +713,16 @@
                     <?php
                     foreach($lista as $alphabet){
                         if(isset($array2[$state][$alphabet->getContent()])){
-                            if(strlen($array2[$state][$alphabet->getContent()]) > 1 && $array2[$state][$alphabet->getContent()] != 'XX') {
+                            if(count(explode(".", $array2[$state][$alphabet->getContent()])) > 1 && $array2[$state][$alphabet->getContent()] != 'xx') {
+                                $contentTable = implode("", explode("_", implode("", explode(".", $array2[$state][$alphabet->getContent()]))));
                     ?>
-                                <td><?='['.$array2[$state][$alphabet->getContent()].']'?></td>
+                                <td><?='['.$contentTable.']'?></td>
                     <?php
                             }
                             else {
+                                $contentTable = implode("", explode("_", implode("", explode(".", $array2[$state][$alphabet->getContent()]))));
                     ?>
-                                <td><?=$array2[$state][$alphabet->getContent()]?></td>
+                                <td><?=$contentTable?></td>
                     <?php
                             } 
                         }
