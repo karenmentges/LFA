@@ -16,7 +16,7 @@ input[type=submit], input[type=reset], button {
     height: 35px;
 	border: 0;
     border-radius: 35px;
-    margin-top: 100px;
+    margin-top: 60px;
     cursor: pointer;
 }
 
@@ -44,7 +44,7 @@ input[type=reset] {
 }
 
 #second {
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
 input[type="file"] {
@@ -53,8 +53,11 @@ input[type="file"] {
 
 .inputfile_box {
   	position: relative;
-	margin-top: 15vh;
     text-align: center;
+}
+
+#input1 {
+    margin-top: 12vh;
 }
 
 .file_box {
@@ -81,7 +84,7 @@ input[type="file"] {
 	cursor: pointer;
 }
 
-#file_name {
+#file_name, #file_name2 {
     color: #323232;
 }
 

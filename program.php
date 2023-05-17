@@ -17,9 +17,13 @@
 
     <form action="generator.php" method="post" enctype="multipart/form-data">
         <div class="uploads">
-            <div id="input" class="inputfile_box">
-                <label for="txt"><span id="file_name" class="file_box"></span><span class="file_button"><i class='bx bx-paperclip' id="clip"></i>&nbsp;&nbsp;Realizar upload do txt</span></label><br>
-                <input type="file" id="txt" name="field_txt" accept=".txt" required oninvalid="this.setCustomValidity('Insira um txt!')" oninput="setCustomValidity('')" onchange='uploadFile(this)'/><br>
+            <div id="input1" class="inputfile_box">
+                <label for="txt"><span id="file_name" class="file_box"></span><span class="file_button"><i class='bx bx-paperclip' id="clip"></i>&nbsp;&nbsp;Realizar upload da gramática</span></label><br>
+                <input type="file" id="txt" name="field_txt" accept=".txt" required oninvalid="this.setCustomValidity('Insira a gramática!')" oninput="setCustomValidity('')" onchange='uploadFile(this)'/><br>
+            </div>
+            <div id="input2" class="inputfile_box">
+                <label for="txt2"><span id="file_name2" class="file_box"></span><span class="file_button"><i class='bx bx-paperclip' id="clip"></i>&nbsp;&nbsp;Realizar upload do texto</span></label><br>
+                <input type="file" id="txt2" name="field_txt2" accept=".txt" required oninvalid="this.setCustomValidity('Insira o texto!')" oninput="setCustomValidity('')" onchange='uploadFile2(this)'/><br>
             </div>
         </div>
 
