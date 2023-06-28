@@ -154,4 +154,29 @@ function printAFD($lista, $array3, $array2, $finalstate) {
 <?php
 }
 
+// Função para imprimir a tabela de simbolos
+function printTabelaSimbolos($tabelaSimbolos) {
+?>
+    <div class="table-wrapper">
+        <H3>Tabela de Simbolos</H3>
+        <table>
+            <tr>
+                <th class="small">Nome</th>
+                <th class="small">Linha</th>
+            </tr>
+            <?php
+            foreach($tabelaSimbolos as $simbolos){
+            ?>
+                <tr>
+                    <td><?=$simbolos['nome']?></td>
+                    <td><?=$simbolos['linha']?></td>
+                </tr>
+            <?php
+            }
+            ?>
+        </table>
+    </div>
+<?php
+}
+
 ?>

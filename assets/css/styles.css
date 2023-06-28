@@ -116,3 +116,7 @@ table td {
 	padding: 5px 25px;
     border: 1px solid white;
 }
+
+.small {
+    font-size: 1.1rem; 
+}

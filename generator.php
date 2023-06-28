@@ -3,6 +3,7 @@
     include_once("functions/creationAFND.php");
     include_once("functions/creationAFD.php");
     include_once("functions/lexicalAnalyzer.php");
+    include_once("functions/parser.php");
     include_once("functions/print.php");
 
     include_once("classes/AlphabetDAO.php");
@@ -127,6 +128,10 @@
         }
     }
 
+    // Impressão das tabelas (LFA)
+    /* printAFND($lista, $lists, $matriz, $finalstate);
+    printAFD($lista, $statesVectorAFD, $matrizAFD, $finalstate); */
+
     // Armazendando os arquivos fornecidos no formulário
     $destination2 = "documents/".$_FILES['field_txt2']['name'];
     move_uploaded_file($_FILES['field_txt2']['tmp_name'], $destination2); 
@@ -137,17 +142,38 @@
     // Realiza a análise léxica e obtém os tokens válidos e a tabela de símbolos
     $resultado = lexicalAnalyzer($entry, $matrizAFD, $finalstateAFD);
 
+    // Lendo o arquivo xml
+    $xml = simplexml_load_file("documents/GLC.xml");
+
+    // Realiza a análise sintática
+    parser($xml, $resultado['tape'], $resultado['tabelaSimbolos']);
+    echo "<br>";
+    
+    // Exibe a tabela de símbolos
+    printTabelaSimbolos($resultado['tabelaSimbolos']);
+
+    
+    // Exibe a fita
+   /*  echo "Fita: ";
+    print_r($resultado['tape']);
+    echo "<br>"; */
+
     // Exibe os tokens válidos encontrados
-    echo "Tokens válidos: ";
+    /* echo "Tokens válidos: ";
     print_r($resultado['tokensValidos']);
+    echo "<br>"; */
+    
+    // Exibe os tokens inválidos encontrados
+    /* echo "Tokens inválidos: ";
+    print_r($resultado['tokensInvalidos']);
+    echo "<br>"; */
 
     // Exibe a tabela de símbolos
-    echo "Tabela de símbolos: ";
+    /* echo "Tabela de símbolos: ";
     print_r($resultado['tabelaSimbolos']);
+    echo "<br>"; */
 
-    // Impressão das tabelas
-    printAFND($lista, $lists, $matriz, $finalstate);
-    printAFD($lista, $statesVectorAFD, $matrizAFD, $finalstate);
+
     ?>
     <a href="program.php"><button>VOLTAR</button></a>
     <br>
