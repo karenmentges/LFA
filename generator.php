@@ -79,37 +79,6 @@
             }
         }
     }
-    
-    /* // Eliminação de estados mortos (Não testado)
-    $array4 = array();  // Vetor com estados não mortos
-    $length = 0;
-    for ($z=0; $z < count($statesVectorAFD); $z++) { 
-        if (in_array($statesVectorAFD[$z], $finalstate)) {
-            $array4[] = $statesVectorAFD[$z];  
-        }
-    }
-    while ($length != count($array4)) {
-        $length = count($array4);
-        foreach($statesVectorAFD as $state){
-            foreach($lista as $alphabet) {
-                if(isset($matrizAFD[$state][$alphabet->getContent()])) {
-                    if(in_array($matrizAFD[$state][$alphabet->getContent()], $array4)) {
-                        if(!in_array($state, $array4)) {
-                            $array4[] = $state;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    for ($z=0; $z < count($statesVectorAFD); $z++) { 
-        if(!in_array($statesVectorAFD[$z], $array4)) {
-            unset($statesVectorAFD[$z]);
-            foreach($lista as $alphabet) {
-                unset($matrizAFD[$statesVectorAFD[$z]][$alphabet->getContent()]);
-            }
-        }
-    } */
 
     // Adicionando estado de erro 
     $statesVectorAFD[] = 'xx';
@@ -139,7 +108,7 @@
     // Lendo o arquivo TXT
     $entry = file_get_contents($destination2);
 
-    // Realiza a análise léxica e obtém os tokens válidos e a tabela de símbolos
+    // Realiza a análise léxica e obtém a fita, os tokens válidos, os tokens inválidos e a tabela de símbolos
     $resultado = lexicalAnalyzer($entry, $matrizAFD, $finalstateAFD);
 
     // Lendo o arquivo xml
@@ -151,29 +120,6 @@
     
     // Exibe a tabela de símbolos
     printTabelaSimbolos($resultado['tabelaSimbolos']);
-
-    
-    // Exibe a fita
-   /*  echo "Fita: ";
-    print_r($resultado['tape']);
-    echo "<br>"; */
-
-    // Exibe os tokens válidos encontrados
-    /* echo "Tokens válidos: ";
-    print_r($resultado['tokensValidos']);
-    echo "<br>"; */
-    
-    // Exibe os tokens inválidos encontrados
-    /* echo "Tokens inválidos: ";
-    print_r($resultado['tokensInvalidos']);
-    echo "<br>"; */
-
-    // Exibe a tabela de símbolos
-    /* echo "Tabela de símbolos: ";
-    print_r($resultado['tabelaSimbolos']);
-    echo "<br>"; */
-
-
     ?>
     <a href="program.php"><button>VOLTAR</button></a>
     <br>

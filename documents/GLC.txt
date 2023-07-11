@@ -1,3 +1,4 @@
-S' ::= S $
-S  ::= if opl {S} A | while opl {S} | op
-A  ::= else {S} | ε
+"Start Symbol" = <S>
+
+<S> ::= 'if' 'opl' '{' <S> '}' <A> | 'while' 'opl' '{' <S> '}' | 'op'
+<A> ::= 'else' '{' <S> '}' | 'ε'

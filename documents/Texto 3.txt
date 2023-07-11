@@ -1,2 +1,0 @@
-{ if opl { op }
-{ else op }
